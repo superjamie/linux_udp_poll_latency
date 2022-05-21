@@ -4,7 +4,7 @@ Measures latency between Linux packet RX and UDP `poll()` return.
 
 ## Requirements
 
-Newest Linux kernel packet timestamping interface `SO_TIMESTAMPNS_NEW`. Requires kernel v5.1 or later.
+Newest Linux kernel packet timestamping interface `SO_TIMESTAMPNS_NEW` requires kernel v5.1 or later.
 
 If using an older kernel, you could use plain `SO_TIMESTAMP` which as been around forever but is not Y2038-safe.
 
@@ -29,6 +29,8 @@ Latency between packet and poll return: 123292 ns
 ```
 
 ## Notes
+
+See `timestamping.txt` in kernel-doc: https://www.kernel.org/doc/html/latest/networking/timestamping.html
 
 Monotime is provided to correspond with kernel timestamps in `perf script`.
 

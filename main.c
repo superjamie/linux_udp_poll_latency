@@ -25,9 +25,20 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	/* see timestamping.txt in kernel-doc */
+	/* see timestamping.txt in kernel-doc
+	 * SO_TIMESTAMP: provides usec precision, not Y2038 safe
+	 * SO_TIMESTAMP_NEW: provides usec precision, Y2038 safe
+	 * SO_TIMESTAMPNS: provides ns precision, not Y2038 safe
+	 * SO_TIMESTAMPNS_NEW: provides ns precision, Y2038 safe
+	 */
+
 	const int enable = 1;
 	ret = setsockopt(sockfd, SOL_SOCKET, SO_TIMESTAMPNS_NEW, &enable, sizeof(enable));
+
+	if (-1 == ret) {
+		perror("setsockopt");
+		exit(EXIT_FAILURE);
+	}
 
 	struct sockaddr_in listen_addr = { 0 };
 	listen_addr.sin_family = AF_INET;
@@ -41,7 +52,10 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	/* we expect to receive a `struct timeval` in the cmsg */
+	/* in the cmsg we expect to receive either:
+	 * usec: `struct scm_timestamping` which is an array of 3 `struct timeval`
+	 * ns: `struct scm_timestamping64` which is an array of 3 `strict timespec
+	 */
 
 	struct msghdr my_msgh = { 0 };
 	uint8_t my_ctrlbuf[CMSG_SPACE(sizeof(struct scm_timestamping64))];
@@ -60,8 +74,8 @@ int main(void)
 	my_msgh.msg_iov = &my_iov;
 	my_msgh.msg_iovlen = 1;
 
-	/* the whole purpose of this is to measure the latency between packet recv
-	 * at the NIC and poll return, so poll the socket */
+	/* the whole purpose of this is to measure the latency between packet
+	 * recv at the NIC and poll return, so poll the socket */
 
 	struct pollfd fds[1] = { 0 };
 	fds[0].fd = sockfd;
@@ -71,7 +85,7 @@ int main(void)
 	struct timespec monotime_after_poll = { 0 };
 	struct timespec realtime_after_poll = { 0 };
 	struct timespec realtime_after_recv = { 0 };
-	//struct timeval packet_time = { 0 };
+	//struct scm_timestamping packet_time = { 0 };
 	struct scm_timestamping64 packet_time = { 0 };
 
 	while (true) {
