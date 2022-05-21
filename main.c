@@ -1,3 +1,6 @@
+/* https://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html */
+#define _POSIX_C_SOURCE 200809L
+
 #include <errno.h>
 #include <inttypes.h>
 #include <poll.h>
@@ -9,6 +12,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <asm-generic/socket.h>
 #include <linux/errqueue.h>
 #include <sys/types.h>
 #include <sys/socket.h>
